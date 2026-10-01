@@ -1,0 +1,4 @@
+interface:
+  display_name: "R Meta 全功能分析"
+  short_description: "以 RevMan 设置执行 meta 分析和风险偏倚绘图"
+  default_prompt: "使用 $r-meta-analysis 读取我的数据，按 RevMan 设置执行 Meta 分析并导出可复核结果。"
