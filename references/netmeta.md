@@ -41,9 +41,9 @@ The executor attaches `netmeta` when available, so every exported function can b
 
 ## Figure export
 
-Wrap every network graphic in `export_plot(function() ..., stem, output_dir)` to obtain matching tightly cropped PDF, PNG, and TIFF files from one 600 dpi master. Do not open graphics devices directly. For network geometry specifically, call `export_network_graph()`; it derives outward label anchors from the final node coordinates and increases label distance with node size, preventing treatment names from overlapping node circles. The exporters preserve package-default typography.
+Wrap every network graphic in `export_plot(function() ..., stem, output_dir)` to obtain matching tightly cropped PDF, PNG, and TIFF files from one 600 dpi master. Do not open graphics devices directly. For network geometry specifically, call `export_network_graph()`. Its default is the package's own `netgraph(x)` geometry with blue edges; it does not replace the layout, labels, or typography.
 
-For a graphical league display, use `export_nmaplateplot(result, stem, output_dir, pooled = "random")`. It converts the network estimates to the upper triangle, direct estimates to the lower triangle, and treatment P-scores to the diagonal before calling `nmaplateplot::plateplot()`. It exports the same tightly cropped PDF/PNG/TIFF set. Verify the effect scale and direction because ratio measures are back-transformed while additive measures remain on their original scale.
+For a graphical league display containing risk ratios and risk differences, fit otherwise identical RR and RD network models and call `export_rr_rd_plateplot(rr_model, rd_model, stem, output_dir)`. The upper triangle contains random-effects RR estimates and the lower triangle contains random-effects RD estimates. The helper uses `null_value_zero = c(FALSE, TRUE)`, `lower_better = c(FALSE, FALSE)`, `design_method = c("text", "text")`, `text_size = 2.8`, and the requested efficacy diagonal labels. To reproduce the package example directly, load `ad12.rr.rd` and call `export_nmaplateplot_data(ad12.rr.rd, ...)`. Both helpers use a compact 13 × 8 inch device, which keeps confidence intervals readable while avoiding an excessively wide plate, and tightly crop the result.
 
 ## Extensions
 

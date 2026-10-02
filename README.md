@@ -1,6 +1,6 @@
 # r-meta-analysis
 
-`r-meta-analysis` is a Codex skill for executing reproducible conventional, frequentist network, and component network meta-analyses in R. It combines the complete installed export surfaces of [`meta`](https://cran.r-project.org/package=meta), [`netmeta`](https://cran.r-project.org/package=netmeta), and [`viscomp`](https://cran.r-project.org/package=viscomp) with risk-of-bias visualization from [`robvis`](https://cran.r-project.org/package=robvis) and [`RobustVis`](https://cran.r-project.org/package=RobustVis).
+`r-meta-analysis` is a Codex skill for executing reproducible conventional, frequentist network, and component network meta-analyses in R. It uses eight R packages directly: [`meta`](https://cran.r-project.org/package=meta), [`netmeta`](https://cran.r-project.org/package=netmeta), [`viscomp`](https://cran.r-project.org/package=viscomp), [`nmaplateplot`](https://cran.r-project.org/package=nmaplateplot), [`robvis`](https://cran.r-project.org/package=robvis), [`RobustVis`](https://cran.r-project.org/package=RobustVis), [`magick`](https://cran.r-project.org/package=magick), and [`ggplot2`](https://cran.r-project.org/package=ggplot2).
 
 The skill runs analysis code rather than only suggesting it. Each run preserves the fitted object, executed R plan, package settings, console output, session information, and requested tables and figures.
 
@@ -8,7 +8,9 @@ The skill runs analysis code rather than only suggesting it. Each run preserves 
 
 ### Conventional pairwise meta-analysis
 
-- Binary, continuous, generic inverse-variance, correlation, incidence, rate, proportion, and single-mean outcomes
+- Binary outcomes (risk ratio, odds ratio, and risk difference)
+- Continuous outcomes (mean difference, standardized mean difference, and ratio of means)
+- Generic inverse-variance effects, correlations, incidence rates, single proportions, and single means
 - Common-effect and random-effects models
 - Subgroup, cumulative, influence, leave-one-out, sensitivity, and meta-regression workflows
 - Forest, funnel, Baujat, L'Abbe, radial, drapery, and bubble plots
@@ -19,18 +21,20 @@ The skill runs analysis code rather than only suggesting it. Each run preserves 
 
 ### Frequentist network meta-analysis
 
-- Generic contrast-based synthesis with `netmeta()`
-- Binary network models with `netmetabin()`
-- Arm-level and pairwise data preparation with `netpairwise()`
+- Direct and indirect comparison of three or more competing interventions in one connected evidence network
+- Generic contrast-based synthesis with `netmeta()` and binary network models with `netmetabin()`
+- Arm-level and pairwise data preparation while retaining multi-arm trial correlations
 - Network geometry, connectivity, graphs, forest plots, radial plots, league tables, and matrices
 - Treatment ranking, rankograms, partial orders, and Hasse diagrams
 - Node splitting, design-by-treatment decomposition, net heat plots, contribution matrices, evidence flow, and path-based diagnostics when available
 - Network meta-regression, subgroup analysis, additive component NMA, disconnected-network tools, and package conversion helpers
 - Every function exported by the installed `netmeta` version, plus registered S3 methods through their standard generics
-- Matching 600 dpi PDF/PNG/TIFF output for every network figure, with exact-white trimming and outward, point-size-aware labels that do not cover network nodes
+- Default network graph follows `netgraph(net2)` using the package layout, with blue network edges and tightly cropped 600 dpi PDF/PNG/TIFF output
+- Compact RR/RD league plate: upper triangle shows risk ratios, lower triangle shows risk differences, and both triangles use text cells with `text_size = 2.8`; the default device is 13 × 8 inches to keep confidence intervals readable without the excessively wide layout produced previously
 
 ### Component network meta-analysis
 
+- Decomposition of multi-component interventions such as `A+B+C` into component effects
 - Additive and interaction-aware CNMA estimation with `netmeta::netcomb()` and related component-model functions
 - Model comparison between full intervention NMA and additive component models
 - All eight `viscomp` tools: component description, co-occurrence graph, component heat plot, leaving-one-combination-out scatter plot, density/violin plots, waterfall plot, and multi-outcome rank heat plot
@@ -46,6 +50,19 @@ The skill runs analysis code rather than only suggesting it. Each run preserves 
 
 The RevMan 5 lock applies only to conventional analyses performed by `meta`. RevMan 5 does not define the calculations or defaults for a `netmeta` network meta-analysis. Network results must therefore be reported as `netmeta` results, with their own reference treatment, effect direction, heterogeneity assumptions, transitivity assessment, and consistency diagnostics.
 
+## Packages and responsibilities
+
+| Package | Role |
+|---|---|
+| `meta` | Conventional pairwise meta-analysis and RevMan 5-style defaults |
+| `netmeta` | Frequentist network meta-analysis, diagnostics, ranking, and CNMA estimation |
+| `viscomp` | Exploratory component-frequency and component-combination graphics |
+| `nmaplateplot` | Compact graphical league tables, including combined RR/RD plates |
+| `robvis` | Standard risk-of-bias traffic-light and summary figures |
+| `RobustVis` | ROBUST-RCT risk-of-bias visualization |
+| `magick` | Lossless exact-white trimming and multi-format image writing |
+| `ggplot2` | Plot objects and supporting graphical output |
+
 ## Requirements
 
 - R 4.1 or newer
@@ -58,7 +75,7 @@ The RevMan 5 lock applies only to conventional analyses performed by `meta`. Rev
 Install dependencies before running the skill:
 
 ```r
-install.packages(c("meta", "netmeta", "viscomp", "nmaplateplot", "robvis", "RobustVis", "ggplot2"))
+install.packages(c("meta", "netmeta", "viscomp", "nmaplateplot", "robvis", "RobustVis", "magick", "ggplot2"))
 ```
 
 The executor never installs or upgrades packages during an analysis.

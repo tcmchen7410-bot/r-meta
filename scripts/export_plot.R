@@ -78,62 +78,111 @@ export_network_graph <- function(x,
                                  width = 8,
                                  height = 8,
                                  dpi = 600,
-                                 leader = TRUE,
-                                 leader.col = "grey40",
-                                 leader.lwd = 1,
+                                 blue = "#2166AC",
                                  ...) {
   if (!inherits(x, "netmeta")) stop("'x' must inherit from class 'netmeta'.", call. = FALSE)
   dots <- list(...)
-  dots[c("adj", "offset", "figure")] <- NULL
-
-  measure_layout <- function(args) {
-    temporary_pdf <- tempfile(fileext = ".pdf")
-    grDevices::pdf(temporary_pdf)
-    on.exit({
-      grDevices::dev.off()
-      unlink(temporary_pdf)
-    }, add = TRUE)
-    do.call(netmeta::netgraph, args)
+  if (is.null(dots$col)) dots$col <- blue
+  if (!is.null(dots$cex.points)) {
+    if (is.null(dots$col.points)) dots$col.points <- blue
+    if (is.null(dots$bg.points)) dots$bg.points <- blue
   }
-
-  layout <- measure_layout(c(list(x = x, figure = FALSE), dots))
-  nodes <- layout$nodes
-  eps <- sqrt(.Machine$double.eps)
-  adj <- cbind(
-    ifelse(nodes$xpos < -eps, 1, ifelse(nodes$xpos > eps, 0, 0.5)),
-    ifelse(nodes$ypos < -eps, 1, ifelse(nodes$ypos > eps, 0, 0.5))
-  )
-  point_cex <- dots$cex.points
-  if (is.null(point_cex) || !length(point_cex) || any(!is.finite(point_cex))) point_cex <- 1
-  label_offset <- max(0.08, 0.025 * max(point_cex))
-
-  final_layout <- measure_layout(
-    c(list(x = x, figure = FALSE, adj = adj, offset = label_offset), dots))
-  final_nodes <- final_layout$nodes
 
   export_plot(
     function() {
-      do.call(netmeta::netgraph,
-        c(list(x = x, adj = adj, offset = label_offset), dots))
-      if (isTRUE(leader)) {
-        dx <- final_nodes$xpos.labels - final_nodes$xpos
-        dy <- final_nodes$ypos.labels - final_nodes$ypos
-        distance <- sqrt(dx^2 + dy^2)
-        distance[distance == 0] <- 1
-        point_radius <- 0.018 * rep_len(point_cex, nrow(final_nodes))
-        start_fraction <- pmin(0.8, point_radius / distance)
-        graphics::segments(
-          final_nodes$xpos + dx * start_fraction,
-          final_nodes$ypos + dy * start_fraction,
-          final_nodes$xpos + dx * 0.72,
-          final_nodes$ypos + dy * 0.72,
-          col = leader.col,
-          lwd = leader.lwd
-        )
-      }
+      do.call(netmeta::netgraph, c(list(x = x), dots))
     },
     stem, output_dir, width, height, dpi
   )
+}
+
+as_nmaplateplot_two_measures <- function(upper_model, lower_model,
+                                         pooled = c("random", "common")) {
+  if (!inherits(upper_model, "netmeta") || !inherits(lower_model, "netmeta")) {
+    stop("Both models must inherit from class 'netmeta'.", call. = FALSE)
+  }
+  pooled <- match.arg(pooled)
+  if (!identical(upper_model$trts, lower_model$trts)) {
+    stop("The two models must contain the same treatments in the same order.", call. = FALSE)
+  }
+  suffix <- if (pooled == "random") "random" else "common"
+  trts <- upper_model$trts
+  n <- length(trts)
+  upper_index <- upper.tri(matrix(0, n, n))
+  lower_index <- lower.tri(matrix(0, n, n))
+  ratio_measure <- function(x) x$sm %in% c("OR", "RR", "ROM", "DOR", "HR")
+  transform_measure <- function(x, z) if (ratio_measure(x)) exp(z) else z
+
+  combine <- function(upper_matrix, lower_matrix, diagonal = 0) {
+    ans <- matrix(NA_real_, n, n, dimnames = list(trts, trts))
+    ans[upper_index] <- transform_measure(upper_model, upper_matrix)[upper_index]
+    ans[lower_index] <- transform_measure(lower_model, lower_matrix)[lower_index]
+    diag(ans) <- diagonal
+    as.data.frame(ans, check.names = FALSE)
+  }
+  combine_p <- function(upper_matrix, lower_matrix) {
+    ans <- matrix(NA_real_, n, n, dimnames = list(trts, trts))
+    ans[upper_index] <- upper_matrix[upper_index]
+    ans[lower_index] <- lower_matrix[lower_index]
+    diag(ans) <- 0
+    as.data.frame(ans, check.names = FALSE)
+  }
+  get_matrix <- function(x, prefix) x[[paste0(prefix, ".", suffix)]]
+  ranking <- netmeta::netrank(
+    upper_model,
+    small.values = upper_model$small.values,
+    common = pooled == "common",
+    random = pooled == "random"
+  )[[paste0("ranking.", suffix)]]
+
+  list(
+    Point_estimates = combine(get_matrix(upper_model, "TE"),
+                              get_matrix(lower_model, "TE")),
+    Interval_estimates_LB = combine(get_matrix(upper_model, "lower"),
+                                    get_matrix(lower_model, "lower")),
+    Interval_estimates_UB = combine(get_matrix(upper_model, "upper"),
+                                    get_matrix(lower_model, "upper")),
+    Pvalues = combine_p(get_matrix(upper_model, "pval"),
+                        get_matrix(lower_model, "pval")),
+    Treatment_specific_values = data.frame(
+      Trt_ID = seq_along(trts), Trt_abbrv = trts,
+      Value_Upper = as.numeric(ranking[trts]), stringsAsFactors = FALSE
+    )
+  )
+}
+
+export_nmaplateplot_data <- function(nma_result,
+                                     stem = "league_plateplot",
+                                     output_dir,
+                                     width = 13,
+                                     height = 8,
+                                     dpi = 600) {
+  if (!requireNamespace("nmaplateplot", quietly = TRUE)) {
+    stop("R package 'nmaplateplot' is required.", call. = FALSE)
+  }
+  plate <- nmaplateplot::plateplot(
+    nma_result,
+    null_value_zero = c(FALSE, TRUE),
+    lower_better = c(FALSE, FALSE),
+    design_method = c("text", "text"),
+    text_size = 2.8,
+    upper_diagonal_name = "Efficacy: Risk ratio",
+    lower_diagonal_name = "Efficacy: Risk difference"
+  )
+  export_ggplot(plate, stem, output_dir, width, height, dpi)
+}
+
+export_rr_rd_plateplot <- function(rr_model,
+                                   rd_model,
+                                   stem = "league_rr_rd",
+                                   output_dir,
+                                   pooled = c("random", "common"),
+                                   width = 13,
+                                   height = 8,
+                                   dpi = 600) {
+  pooled <- match.arg(pooled)
+  nma_result <- as_nmaplateplot_two_measures(rr_model, rd_model, pooled)
+  export_nmaplateplot_data(nma_result, stem, output_dir, width, height, dpi)
 }
 
 as_nmaplateplot <- function(x, pooled = c("random", "common")) {
