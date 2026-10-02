@@ -12,7 +12,7 @@ Run the analysis instead of merely drafting code. Use the bundled executor so ea
 1. Inspect input files. Identify the outcome type, effect measure, arm structure, unit of analysis, follow-up, zero-event studies, multi-arm studies, subgroups, and requested model. Never invent study values.
 2. Read [references/revman-compatibility.md](references/revman-compatibility.md) before claiming agreement with RevMan. Ask only for choices that materially alter results and cannot be inferred from supplied RevMan output.
 3. Read [references/function-map.md](references/function-map.md) to choose functions and [references/plan-recipes.md](references/plan-recipes.md) for starting code. For version-sensitive arguments inspect `formals(meta::FUNCTION)` or installed help. Run `scripts/list_capabilities.R` when complete package coverage or an unfamiliar function is requested.
-4. Create a self-contained `plan.R` in the user's output folder. The executor hard-locks `settings.meta("RevMan5")` before sourcing it and rejects any plan that changes the global preset. Express outcome-specific RevMan choices as explicit model-function arguments.
+4. Create a self-contained `plan.R` in the user's output folder. The executor hard-locks `settings.meta("RevMan5")` before sourcing it and rejects any plan that changes the global preset. Express outcome-specific RevMan choices as explicit model-function arguments. Use the injected `export_forest()` helper for each forest plot so all three publication formats are created consistently.
 5. Execute:
 
    ```bash
@@ -23,7 +23,7 @@ Run the analysis instead of merely drafting code. Use the bundled executor so ea
 
 ## Plan contract
 
-The plan may call any exported `meta` function. It must assign the primary fitted object to `result`. Put additional fitted or diagnostic objects in a named list `artifacts`. The executor injects `output_dir`.
+The plan may call any exported `meta` function. It must assign the primary fitted object to `result`. Put additional fitted or diagnostic objects in a named list `artifacts`. The executor injects `output_dir` and `export_forest()`.
 
 ```r
 data <- read.csv("input.csv", check.names = FALSE)
@@ -37,10 +37,10 @@ artifacts <- list(
   cumulative = metacum(result, pooled = "random")
 )
 
-pdf(file.path(output_dir, "forest.pdf"), width = 9, height = 7)
-forest(result, layout = "RevMan5")
-dev.off()
+export_forest(result, stem = "forest", output_dir = output_dir)
 ```
+
+`export_forest()` fixes the width at 210 mm (A4 portrait width), asks `forest.meta()` to calculate the required height from the displayed rows, and keeps one safety row so text is not clipped. It writes a vector PDF plus 300 dpi PNG and TIFF, trims the raster canvas, restores the exact A4-width pixel count, and embeds 300 dpi metadata. It requires `magick`. Do not replace it with a fixed-height graphics device unless the user explicitly requests a different layout.
 
 For conventional risk-of-bias data, use `robvis::rob_traffic_light()` and/or `robvis::rob_summary()`. For ROBUST-RCT step 1 or step 2 assessments, use `RobustVis::rob_bar()` and `RobustVis::rob_traffic_light()`. Read [references/risk-of-bias.md](references/risk-of-bias.md) and save returned ggplot objects.
 
@@ -55,4 +55,4 @@ For conventional risk-of-bias data, use `robvis::rob_traffic_light()` and/or `ro
 
 ## Deliverables
 
-Return the executed plan, `result.rds`, console and session logs, requested tables and plots, and a short methods note listing every consequential setting. Separate primary, subgroup, sensitivity, and exploratory results.
+For every forest plot, return four primary files: `<stem>.pdf`, `<stem>.png`, `<stem>.tiff`, and `analysis_executed.R`. The PDF is vector (therefore resolution-independent); PNG and TIFF are 300 dpi. Also return `result.rds`, console and session logs, requested tables, and a short methods note listing every consequential setting. `plan_executed.R` remains as a compatibility alias. Separate primary, subgroup, sensitivity, and exploratory results.

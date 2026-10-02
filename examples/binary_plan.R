@@ -11,6 +11,4 @@ artifacts <- list(
   cumulative = metacum(result, pooled = "random")
 )
 
-pdf(file.path(output_dir, "forest.pdf"), width = 8, height = 6)
-forest(result, layout = "RevMan5")
-dev.off()
+export_forest(result, stem = "forest", output_dir = output_dir)

@@ -12,17 +12,20 @@ A Codex skill that executes reproducible pairwise meta-analysis workflows with R
 - `robvis` traffic-light and summary plots
 - `RobustVis` ROBUST-RCT bar and traffic-light plots
 - Reproducibility bundle containing the executed plan, RDS objects, settings, console output, session information, and figures
+- Forest plots exported together as vector PDF, 300 dpi PNG, and 300 dpi LZW-compressed TIFF at A4 portrait width with content-driven height
+- Exact executed R plan copied to `analysis_executed.R` (`plan_executed.R` is retained for compatibility)
 
 ## Requirements
 
 - R 4.1 or newer
 - `meta`
+- `magick` (required for tightly cropped 300 dpi PNG/TIFF exports)
 - Optional: `robvis`, `RobustVis`, and `ggplot2`
 
 Install dependencies explicitly in R when needed:
 
 ```r
-install.packages(c("meta", "robvis", "RobustVis", "ggplot2"))
+install.packages(c("meta", "magick", "robvis", "RobustVis", "ggplot2"))
 ```
 
 The skill never installs or upgrades packages during an analysis run.
@@ -46,6 +49,14 @@ Rscript scripts/meta_exec.R plan.R output-directory
 ```
 
 See [`examples/binary_plan.R`](examples/binary_plan.R) and the instructions in [`SKILL.md`](SKILL.md).
+
+Inside a plan, export a forest plot with:
+
+```r
+export_forest(result, stem = "forest", output_dir = output_dir)
+```
+
+This creates `forest.pdf`, `forest.png`, and `forest.tiff`. PDF output is vector and therefore does not have a DPI setting; the two raster files are rendered at 300 dpi. The width is 210 mm and `meta::forest()` calculates the required height from the plot contents.
 
 ## RevMan compatibility
 

@@ -11,10 +11,13 @@ if (!identical(status, 0L)) stop("Smoke analysis failed.")
 
 expected <- c(
   "result.rds", "result_summary.txt", "meta_settings.R",
-  "console.txt", "session_info.txt", "forest.pdf", "plan_executed.R"
+  "console.txt", "session_info.txt", "forest.pdf", "forest.png", "forest.tiff",
+  "plan_executed.R", "analysis_executed.R"
 )
 missing <- expected[!file.exists(file.path(out, expected))]
 if (length(missing)) stop("Missing smoke-test outputs: ", paste(missing, collapse = ", "))
+empty <- expected[file.info(file.path(out, expected))$size <= 0]
+if (length(empty)) stop("Empty smoke-test outputs: ", paste(empty, collapse = ", "))
 
 fit <- readRDS(file.path(out, "result.rds"))
 if (!inherits(fit, "meta")) stop("Primary result is not a meta object.")

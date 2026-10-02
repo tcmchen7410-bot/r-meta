@@ -8,6 +8,13 @@ output_dir <- normalizePath(args[[2]], mustWork = FALSE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 output_dir <- normalizePath(output_dir, mustWork = TRUE)
 
+all_args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", all_args, value = TRUE)
+if (length(file_arg) != 1L) stop("Cannot locate meta_exec.R.", call. = FALSE)
+runner_file <- normalizePath(sub("^--file=", "", file_arg), mustWork = TRUE)
+helper_file <- file.path(dirname(runner_file), "export_plot.R")
+if (!file.exists(helper_file)) stop("Missing scripts/export_plot.R.", call. = FALSE)
+
 if (!requireNamespace("meta", quietly = TRUE)) stop("R package 'meta' is required.", call. = FALSE)
 
 log_file <- file.path(output_dir, "console.txt")
@@ -28,6 +35,7 @@ revman5_settings <- settings.meta(quietly = TRUE)
 analysis_env <- new.env(parent = globalenv())
 analysis_env$output_dir <- output_dir
 analysis_env$plan_file <- plan
+sys.source(helper_file, envir = analysis_env, keep.source = TRUE)
 analysis_env$optional_package_exports <- function(package) {
   if (!requireNamespace(package, quietly = TRUE)) return(character())
   sort(getNamespaceExports(package))
@@ -58,6 +66,7 @@ ok <- tryCatch({
   }
 
   file.copy(plan, file.path(output_dir, "plan_executed.R"), overwrite = TRUE)
+  file.copy(plan, file.path(output_dir, "analysis_executed.R"), overwrite = TRUE)
   TRUE
 }, error = function(e) {
   cat("\nERROR:", conditionMessage(e), "\n")
