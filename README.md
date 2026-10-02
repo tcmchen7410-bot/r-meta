@@ -69,6 +69,12 @@ Rscript tests/run_smoke.R
 Rscript scripts/list_capabilities.R
 ```
 
-## Repository status
+## Contact
 
-No license has been selected. Add an appropriate license before accepting external contributions or redistributing the repository.
+Guang Chen
+
+Email: [tcm_chen7410@163.com](mailto:tcm_chen7410@163.com)
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
