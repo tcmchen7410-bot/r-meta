@@ -30,7 +30,7 @@ The skill runs analysis code rather than only suggesting it. Each run preserves 
 - Network meta-regression, subgroup analysis, additive component NMA, disconnected-network tools, and package conversion helpers
 - Every function exported by the installed `netmeta` version, plus registered S3 methods through their standard generics
 - Default network graph follows `netgraph(net2)` using the package layout, with blue network edges and tightly cropped 600 dpi PDF/PNG/TIFF output
-- Compact RR/RD league plate: upper triangle shows risk ratios, lower triangle shows risk differences, and both triangles use text cells with `text_size = 2.8`; the default device is 13 × 8 inches to keep confidence intervals readable without the excessively wide layout produced previously
+- Compact RR/RD league plate: upper triangle shows risk ratios, lower triangle shows risk differences, and both triangles use text cells with `text_size = 2.8`; the device dimensions scale with the number of treatments so every result cell keeps a consistent landscape rectangle instead of stretching small networks across a fixed wide canvas
 
 ### Component network meta-analysis
 
@@ -62,6 +62,11 @@ The RevMan 5 lock applies only to conventional analyses performed by `meta`. Rev
 | `RobustVis` | ROBUST-RCT risk-of-bias visualization |
 | `magick` | Lossless exact-white trimming and multi-format image writing |
 | `ggplot2` | Plot objects and supporting graphical output |
+
+League-plate dimensions are computed from the treatment count (`n`): width
+`3.0 + 0.85n` inches and height `1.0 + 0.46n` inches. The fixed allowance
+accommodates the P-value/SUCRA legends; the remaining area scales with the
+league table. Explicit `width` or `height` values still override either default.
 
 ## Requirements
 

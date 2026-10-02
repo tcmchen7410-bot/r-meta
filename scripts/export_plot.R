@@ -151,11 +151,26 @@ as_nmaplateplot_two_measures <- function(upper_model, lower_model,
   )
 }
 
+nmaplateplot_device_size <- function(nma_result, width = NULL, height = NULL) {
+  estimates <- nma_result$Point_estimates
+  if (is.null(estimates) || nrow(estimates) != ncol(estimates)) {
+    stop("'nma_result$Point_estimates' must be a square matrix-like object.",
+         call. = FALSE)
+  }
+  n_treatments <- nrow(estimates)
+
+  # Keep the physical size and landscape aspect of each table cell stable.
+  # The fixed allowance covers the P-value / SUCRA legends and outer labels.
+  if (is.null(width)) width <- 3.0 + 0.85 * n_treatments
+  if (is.null(height)) height <- 1.0 + 0.46 * n_treatments
+  c(width = width, height = height)
+}
+
 export_nmaplateplot_data <- function(nma_result,
                                      stem = "league_plateplot",
                                      output_dir,
-                                     width = 13,
-                                     height = 8,
+                                     width = NULL,
+                                     height = NULL,
                                      dpi = 600) {
   if (!requireNamespace("nmaplateplot", quietly = TRUE)) {
     stop("R package 'nmaplateplot' is required.", call. = FALSE)
@@ -169,7 +184,8 @@ export_nmaplateplot_data <- function(nma_result,
     upper_diagonal_name = "Efficacy: Risk ratio",
     lower_diagonal_name = "Efficacy: Risk difference"
   )
-  export_ggplot(plate, stem, output_dir, width, height, dpi)
+  size <- nmaplateplot_device_size(nma_result, width, height)
+  export_ggplot(plate, stem, output_dir, size[["width"]], size[["height"]], dpi)
 }
 
 export_rr_rd_plateplot <- function(rr_model,
@@ -177,8 +193,8 @@ export_rr_rd_plateplot <- function(rr_model,
                                    stem = "league_rr_rd",
                                    output_dir,
                                    pooled = c("random", "common"),
-                                   width = 13,
-                                   height = 8,
+                                   width = NULL,
+                                   height = NULL,
                                    dpi = 600) {
   pooled <- match.arg(pooled)
   nma_result <- as_nmaplateplot_two_measures(rr_model, rd_model, pooled)

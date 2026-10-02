@@ -46,8 +46,8 @@ if (requireNamespace("nmaplateplot", quietly = TRUE)) {
     stop("Plate plot was not tightly cropped.")
   }
   plate_ratio <- plate_info$width / plate_info$height
-  if (plate_ratio < 1.55 || plate_ratio > 1.90) {
-    stop("Plate plot aspect ratio does not match the compact reference layout.")
+  if (plate_ratio < 1.85 || plate_ratio > 2.25) {
+    stop("Plate plot aspect ratio does not match the reference cell geometry.")
   }
 }
 
