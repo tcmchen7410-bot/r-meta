@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-packages <- c("meta", "robvis", "RobustVis")
+packages <- c("meta", "netmeta", "viscomp", "robvis", "RobustVis")
 for (pkg in packages) {
   cat("\n##", pkg, "\n")
   if (!requireNamespace(pkg, quietly = TRUE)) {

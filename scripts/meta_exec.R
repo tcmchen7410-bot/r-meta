@@ -31,6 +31,10 @@ on.exit({
 cat("Plan:", plan, "\nOutput:", output_dir, "\n")
 library(meta)
 library(magick)
+netmeta_available <- requireNamespace("netmeta", quietly = TRUE)
+if (netmeta_available) suppressPackageStartupMessages(library(netmeta))
+viscomp_available <- requireNamespace("viscomp", quietly = TRUE)
+if (viscomp_available) suppressPackageStartupMessages(library(viscomp))
 invisible(meta::settings.meta("RevMan5"))
 revman5_settings <- meta::settings.meta(quietly = TRUE)
 
@@ -38,6 +42,12 @@ analysis_env <- new.env(parent = globalenv())
 analysis_env$output_dir <- output_dir
 analysis_env$plan_file <- plan
 sys.source(helper_file, envir = analysis_env, keep.source = TRUE)
+analysis_env$package_exports <- function(package) {
+  if (!requireNamespace(package, quietly = TRUE)) {
+    stop("R package '", package, "' is required but not installed.", call. = FALSE)
+  }
+  sort(getNamespaceExports(package))
+}
 analysis_env$optional_package_exports <- function(package) {
   if (!requireNamespace(package, quietly = TRUE)) return(character())
   sort(getNamespaceExports(package))
@@ -53,6 +63,57 @@ ok <- tryCatch({
     stop("PLAN.R must assign the primary meta-analysis object to 'result'.")
   }
   result <- get("result", envir = analysis_env, inherits = FALSE)
+
+  artifacts <- NULL
+  if (exists("artifacts", envir = analysis_env, inherits = FALSE)) {
+    artifacts <- get("artifacts", envir = analysis_env, inherits = FALSE)
+    if (!is.list(artifacts) || is.null(names(artifacts))) {
+      stop("'artifacts' must be a named list.")
+    }
+  }
+
+  executed_code <- c(
+    "#!/usr/bin/env Rscript",
+    "",
+    "library(meta)",
+    "library(magick)",
+    "if (requireNamespace(\"netmeta\", quietly = TRUE)) library(netmeta)",
+    "if (requireNamespace(\"viscomp\", quietly = TRUE)) library(viscomp)",
+    "invisible(meta::settings.meta(\"RevMan5\"))",
+    paste0("output_dir <- ", deparse(output_dir)),
+    paste0("plan_file <- ", deparse(plan)),
+    "dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)",
+    "",
+    "# Export helper executed by the analysis runner",
+    readLines(helper_file, warn = FALSE),
+    "",
+    "# Analysis plan",
+    readLines(plan, warn = FALSE)
+  )
+  writeLines(executed_code, file.path(output_dir, "analysis_executed.R"), useBytes = TRUE)
+
+  is_pairwise_meta <- inherits(result, "meta") && !inherits(result, "netmeta")
+
+  if (!is_pairwise_meta) {
+    saveRDS(result, file.path(output_dir, "result.rds"))
+    dput(current_settings, file = file.path(output_dir, "meta_settings.R"))
+    if (netmeta_available) {
+      dput(netmeta::settings.netmeta(quietly = TRUE),
+           file = file.path(output_dir, "netmeta_settings.R"))
+    }
+    capture.output(print(result), file = file.path(output_dir, "result_summary.txt"))
+    capture.output(utils::sessionInfo(), file = file.path(output_dir, "session_info.txt"))
+    if (!is.null(artifacts)) {
+      saveRDS(artifacts, file.path(output_dir, "artifacts.rds"))
+      for (nm in names(artifacts)) {
+        capture.output(print(artifacts[[nm]]),
+                       file = file.path(output_dir, paste0("artifact_", nm, ".txt")))
+      }
+    }
+    file.copy(plan, file.path(output_dir, "plan_executed.R"), overwrite = TRUE)
+    flush(zz)
+    file.copy(log_file, file.path(output_dir, "console.txt"), overwrite = TRUE)
+  } else {
 
   bt <- function(value) {
     if (is.null(value)) return(numeric())
@@ -115,28 +176,11 @@ ok <- tryCatch({
   statistics <- do.call(rbind, c(list(study_rows), pooled_rows))
   utils::write.csv(statistics, file.path(output_dir, "statistics.csv"), row.names = FALSE, na = "")
 
-  executed_code <- c(
-    "#!/usr/bin/env Rscript",
-    "",
-    "library(meta)",
-    "library(magick)",
-    "invisible(meta::settings.meta(\"RevMan5\"))",
-    paste0("output_dir <- ", deparse(output_dir)),
-    paste0("plan_file <- ", deparse(plan)),
-    "dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)",
-    "",
-    "# Export helper executed by the analysis runner",
-    readLines(helper_file, warn = FALSE),
-    "",
-    "# Analysis plan",
-    readLines(plan, warn = FALSE)
-  )
-  writeLines(executed_code, file.path(output_dir, "analysis_executed.R"), useBytes = TRUE)
-
   images <- list.files(output_dir, pattern = "\\.(pdf|png|tiff)$", full.names = FALSE)
   stems <- sub("\\.(pdf|png|tiff)$", "", images)
   if (length(images) != 3L || length(unique(stems)) != 1L) {
     stop("A run must create exactly one matching PDF/PNG/TIFF image set.")
+  }
   }
   TRUE
 }, error = function(e) {
