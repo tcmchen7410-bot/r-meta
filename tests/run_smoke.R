@@ -24,12 +24,12 @@ if (!setequal(actual, expected)) {
 
 for (image_file in c("forest.png", "forest.tiff")) {
   image <- magick::image_read(file.path(out, image_file))
-  trimmed <- magick::image_trim(image, fuzz = 0)
+  trimmed <- magick::image_trim(image)
   info <- magick::image_info(image)
   trim_info <- magick::image_info(trimmed)
-  if (!identical(info$width - trim_info$width, 4L) ||
-      !identical(info$height - trim_info$height, 4L)) {
-    stop(image_file, " must contain exactly a two-pixel safety border.")
+  if (!identical(info$width, trim_info$width) ||
+      !identical(info$height, trim_info$height)) {
+    stop(image_file, " still contains a removable outer border.")
   }
 }
 
@@ -42,8 +42,8 @@ required_code <- c(
 if (!all(required_code %in% executed)) {
   stop("analysis_executed.R does not contain the required reproducibility preamble.")
 }
-if (any(grepl("fontsize\\s*=|fontfamily\\s*=|fs\\.[A-Za-z]+\\s*=", executed))) {
-  stop("analysis_executed.R overrides meta's default font settings.")
+if (any(grepl("render_width_in|rows_gr|trim_fuzz|fontsize\\s*=|fontfamily\\s*=|fs\\.[A-Za-z]+\\s*=", executed))) {
+  stop("analysis_executed.R overrides forest defaults.")
 }
 
 statistics <- utils::read.csv(file.path(out, "statistics.csv"), check.names = FALSE)

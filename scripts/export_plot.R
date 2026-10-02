@@ -3,33 +3,23 @@
 library(magick)
 
 # Export one RevMan 5-style forest plot as tightly cropped PNG, TIFF, and PDF.
-# A generous temporary canvas prevents column clipping; all final formats are
-# generated from the same trimmed 300 dpi raster so their boundaries match.
+# Forest typography and layout come entirely from settings.meta("RevMan5") and
+# meta::forest() defaults. The device height follows the study count, and the
+# final files are made from one losslessly trimmed 600 dpi master.
 export_forest <- function(x,
                           stem = "forest",
                           output_dir,
-                          dpi = 300,
-                          render_width_in = 20,
-                          rows_gr = 2,
                           ...) {
   if (!inherits(x, "meta")) stop("'x' must inherit from class 'meta'.", call. = FALSE)
   if (!dir.exists(output_dir)) stop("'output_dir' does not exist.", call. = FALSE)
-  if (!is.numeric(dpi) || length(dpi) != 1L || dpi <= 0) {
-    stop("'dpi' must be one positive number.", call. = FALSE)
-  }
-  if (!is.numeric(render_width_in) || length(render_width_in) != 1L || render_width_in <= 0) {
-    stop("'render_width_in' must be one positive number.", call. = FALSE)
-  }
 
   dots <- list(...)
-  if ("layout" %in% names(dots)) {
-    stop("'layout' is locked to 'RevMan5' by this skill.", call. = FALSE)
-  }
-  font_args <- names(dots)[names(dots) %in% c("fontsize", "fontfamily") |
-                             grepl("^fs\\.", names(dots))]
-  if (length(font_args)) {
-    stop("Font settings are locked to the meta package defaults; remove: ",
-         paste(font_args, collapse = ", "), call. = FALSE)
+  nondefault_args <- names(dots)[names(dots) %in% c(
+    "layout", "width", "height", "rows.gr", "fontsize", "fontfamily"
+  ) | grepl("^fs\\.", names(dots))]
+  if (length(nondefault_args)) {
+    stop("Forest layout, dimensions, rows, and fonts must use meta defaults; remove: ",
+         paste(nondefault_args, collapse = ", "), call. = FALSE)
   }
 
   paths <- c(
@@ -37,44 +27,30 @@ export_forest <- function(x,
     png = file.path(output_dir, paste0(stem, ".png")),
     tiff = file.path(output_dir, paste0(stem, ".tiff"))
   )
-  temporary_pdf <- tempfile(fileext = ".pdf")
-  temporary_png <- tempfile(fileext = ".png")
-  on.exit(unlink(c(temporary_pdf, temporary_png)), add = TRUE)
+  temporary_tiff <- tempfile(fileext = ".tiff")
+  on.exit(unlink(temporary_tiff), add = TRUE)
 
-  common <- c(list(
-    x = x,
-    layout = "RevMan5",
-    width = render_width_in,
-    rows.gr = rows_gr
-  ), dots)
-
-  probe <- do.call(meta::forest, c(common, list(
-    file = temporary_pdf,
-    args.gr = list(useDingbats = FALSE)
-  )))
-  height_in <- probe$figheight$total_height
-
-  grDevices::png(
-    temporary_png,
-    width = render_width_in,
-    height = height_in,
+  dpi <- 600
+  estimated_height <- (x$k + 9) * 0.28 + 1.0
+  longest_label <- max(nchar(as.character(x$studlab)), na.rm = TRUE)
+  label_allowance <- max(0, longest_label - 20) * 0.18
+  model_allowance <- if (isTRUE(x$common) && isTRUE(x$random)) 2 else 0
+  device_width <- 10 + label_allowance + model_allowance
+  grDevices::tiff(
+    filename = temporary_tiff,
+    width = device_width,
+    height = estimated_height,
     units = "in",
     res = dpi,
     bg = "white"
   )
   tryCatch(
-    invisible(do.call(meta::forest, common)),
+    invisible(do.call(meta::forest, c(list(x = x), dots))),
     finally = grDevices::dev.off()
   )
 
-  image <- magick::image_read(temporary_png)
-  # Zero fuzz removes only pixels that exactly match the white background.
-  # Anti-aliased glyph edges are therefore retained instead of being mistaken
-  # for near-white margin pixels.
-  image <- magick::image_trim(image, fuzz = 0)
-  # Two pixels protect glyph ascenders/descenders from device- and
-  # format-specific edge clipping while remaining visually tight.
-  image <- magick::image_border(image, color = "white", geometry = "2x2")
+  image <- magick::image_read(temporary_tiff)
+  image <- magick::image_trim(image)
   density <- paste0(dpi, "x", dpi)
 
   magick::image_write(image, path = paths[["png"]], format = "png", density = density)

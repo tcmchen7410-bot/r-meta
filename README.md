@@ -12,14 +12,14 @@ A Codex skill that executes reproducible pairwise meta-analysis workflows with R
 - `robvis` traffic-light and summary plots
 - `RobustVis` ROBUST-RCT bar and traffic-light plots
 - Five-file delivery bundle: PDF, PNG, TIFF, executed R code, and CSV statistics
-- RevMan5-layout forest plots exported together as tightly cropped 300 dpi PDF, PNG, and TIFF files with matching boundaries
+- RevMan5-default forest plots exported together as tightly cropped 600 dpi PDF, PNG, and TIFF files with matching boundaries
 - Exact executable analysis copied to `analysis_executed.R`, including the RevMan5 preset and export helper
 
 ## Requirements
 
 - R 4.1 or newer
 - `meta`
-- `magick` (required for tightly cropped 300 dpi PDF/PNG/TIFF exports)
+- `magick` (required for tightly cropped 600 dpi PDF/PNG/TIFF exports)
 - Optional: `robvis`, `RobustVis`, and `ggplot2`
 
 Install dependencies explicitly in R when needed:
@@ -56,7 +56,7 @@ Inside a plan, export a forest plot with:
 export_forest(result, stem = "forest", output_dir = output_dir)
 ```
 
-This creates `forest.pdf`, `forest.png`, and `forest.tiff` from one tightly cropped 300 dpi master. No A4 or other fixed-paper width is imposed. The helper hard-locks `layout = "RevMan5"`, leaves every font setting at the `meta` package default, trims only exact-white margin pixels, and retains a two-pixel safety edge so text is not clipped. The executor separately loads `meta` and `magick` and hard-locks `meta::settings.meta("RevMan5")`. The remaining two files are `analysis_executed.R`, containing the full executable analysis, and `statistics.csv`, containing study-level and pooled statistical results.
+This creates `forest.pdf`, `forest.png`, and `forest.tiff` from one tightly cropped 600 dpi master. No A4 or other fixed-paper width is imposed. The helper leaves layout, rows, font size, and font family at the `meta` package defaults inherited from `settings.meta("RevMan5")`. It follows the reference workflow and calls `magick::image_trim(image)` without fuzz or an added border, preventing near-white glyph edges from being treated as margin. The remaining two files are `analysis_executed.R`, containing the full executable analysis, and `statistics.csv`, containing study-level and pooled statistical results.
 
 ## RevMan compatibility
 
