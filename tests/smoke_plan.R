@@ -1,5 +1,5 @@
 data <- data.frame(
-  study = c("Trial A", "Trial B", "Trial C"),
+  study = c("Trial A with a deliberately long study label", "Trial B", "Trial C"),
   event.e = c(12, 8, 20), n.e = c(100, 80, 120),
   event.c = c(18, 14, 25), n.c = c(100, 80, 120)
 )

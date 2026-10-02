@@ -35,13 +35,13 @@ result <- metabin(event.e, n.e, event.c, n.c,
 export_forest(result, stem = "forest", output_dir = output_dir)
 ```
 
-`export_forest()` draws on a generous temporary canvas, fixes `layout = "RevMan5"`, and uses `magick::image_trim()` to crop to the actual non-white content. PNG, TIFF, and PDF are produced from the same cropped 300 dpi master, so they have matching boundaries and no fixed-paper white border. It requires and loads `magick`. Do not pass `layout` from a plan or replace this helper with a manually sized device.
+`export_forest()` draws on an oversized temporary canvas with extra safety rows, fixes `layout = "RevMan5"`, and uses `magick::image_trim(..., fuzz = 0)` to remove only pure-white margin pixels. It then adds exactly two white pixels on each edge to protect glyph ascenders and descenders from format-specific clipping. PNG, TIFF, and PDF are produced from this same 300 dpi master, so their boundaries match and remain visually tight without sacrificing text. It requires and loads `magick`. Font size, font family, and all `fs.*` arguments are intentionally omitted and rejected so `meta` always uses its own defaults. Do not pass `layout` or font arguments from a plan, and do not replace this helper with a manually sized device.
 
 For conventional risk-of-bias data, use `robvis::rob_traffic_light()` and/or `robvis::rob_summary()`. For ROBUST-RCT step 1 or step 2 assessments, use `RobustVis::rob_bar()` and `RobustVis::rob_traffic_light()`. Read [references/risk-of-bias.md](references/risk-of-bias.md) and save returned ggplot objects.
 
 ## Statistical invariants
 
-- Always use the executor's hard-locked `meta::settings.meta("RevMan5")`; never call `settings.meta()` inside a plan to select another preset. Forest plots must use the helper's hard-locked `layout = "RevMan5"`.
+- Always use the executor's hard-locked `meta::settings.meta("RevMan5")`; never call `settings.meta()` inside a plan to select another preset. Forest plots must use the helper's hard-locked `layout = "RevMan5"` and the package's default font settings.
 - Match the target RevMan version's effect measure, model, pooling method, tau estimator, CI method, continuity correction, zero-event handling, subgroup tests, and precision before comparing results.
 - Do not run funnel-asymmetry tests with fewer than 10 studies unless explicitly requested as exploratory; label them unreliable.
 - Handle multi-arm studies with `pairwise()` or an explicitly justified method. Never silently duplicate controls.

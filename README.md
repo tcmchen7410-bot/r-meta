@@ -56,7 +56,7 @@ Inside a plan, export a forest plot with:
 export_forest(result, stem = "forest", output_dir = output_dir)
 ```
 
-This creates `forest.pdf`, `forest.png`, and `forest.tiff` from one tightly cropped 300 dpi master. No A4 or other fixed-paper width is imposed. The helper hard-locks `layout = "RevMan5"`; the executor separately loads `meta` and `magick` and hard-locks `meta::settings.meta("RevMan5")`. The remaining two files are `analysis_executed.R`, containing the full executable analysis, and `statistics.csv`, containing study-level and pooled statistical results.
+This creates `forest.pdf`, `forest.png`, and `forest.tiff` from one tightly cropped 300 dpi master. No A4 or other fixed-paper width is imposed. The helper hard-locks `layout = "RevMan5"`, leaves every font setting at the `meta` package default, trims only exact-white margin pixels, and retains a two-pixel safety edge so text is not clipped. The executor separately loads `meta` and `magick` and hard-locks `meta::settings.meta("RevMan5")`. The remaining two files are `analysis_executed.R`, containing the full executable analysis, and `statistics.csv`, containing study-level and pooled statistical results.
 
 ## RevMan compatibility
 

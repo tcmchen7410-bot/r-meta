@@ -9,10 +9,8 @@ export_forest <- function(x,
                           stem = "forest",
                           output_dir,
                           dpi = 300,
-                          render_width_in = 16,
-                          rows_gr = 1,
-                          fontsize = 8,
-                          trim_fuzz = 1,
+                          render_width_in = 20,
+                          rows_gr = 2,
                           ...) {
   if (!inherits(x, "meta")) stop("'x' must inherit from class 'meta'.", call. = FALSE)
   if (!dir.exists(output_dir)) stop("'output_dir' does not exist.", call. = FALSE)
@@ -26,6 +24,12 @@ export_forest <- function(x,
   dots <- list(...)
   if ("layout" %in% names(dots)) {
     stop("'layout' is locked to 'RevMan5' by this skill.", call. = FALSE)
+  }
+  font_args <- names(dots)[names(dots) %in% c("fontsize", "fontfamily") |
+                             grepl("^fs\\.", names(dots))]
+  if (length(font_args)) {
+    stop("Font settings are locked to the meta package defaults; remove: ",
+         paste(font_args, collapse = ", "), call. = FALSE)
   }
 
   paths <- c(
@@ -41,8 +45,7 @@ export_forest <- function(x,
     x = x,
     layout = "RevMan5",
     width = render_width_in,
-    rows.gr = rows_gr,
-    fontsize = fontsize
+    rows.gr = rows_gr
   ), dots)
 
   probe <- do.call(meta::forest, c(common, list(
@@ -65,7 +68,13 @@ export_forest <- function(x,
   )
 
   image <- magick::image_read(temporary_png)
-  image <- magick::image_trim(image, fuzz = trim_fuzz)
+  # Zero fuzz removes only pixels that exactly match the white background.
+  # Anti-aliased glyph edges are therefore retained instead of being mistaken
+  # for near-white margin pixels.
+  image <- magick::image_trim(image, fuzz = 0)
+  # Two pixels protect glyph ascenders/descenders from device- and
+  # format-specific edge clipping while remaining visually tight.
+  image <- magick::image_border(image, color = "white", geometry = "2x2")
   density <- paste0(dpi, "x", dpi)
 
   magick::image_write(image, path = paths[["png"]], format = "png", density = density)
