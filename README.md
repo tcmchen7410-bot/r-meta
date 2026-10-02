@@ -27,6 +27,7 @@ The skill runs analysis code rather than only suggesting it. Each run preserves 
 - Node splitting, design-by-treatment decomposition, net heat plots, contribution matrices, evidence flow, and path-based diagnostics when available
 - Network meta-regression, subgroup analysis, additive component NMA, disconnected-network tools, and package conversion helpers
 - Every function exported by the installed `netmeta` version, plus registered S3 methods through their standard generics
+- Matching 600 dpi PDF/PNG/TIFF output for every network figure, with exact-white trimming and outward, point-size-aware labels that do not cover network nodes
 
 ### Component network meta-analysis
 
@@ -34,6 +35,7 @@ The skill runs analysis code rather than only suggesting it. Each run preserves 
 - Model comparison between full intervention NMA and additive component models
 - All eight `viscomp` tools: component description, co-occurrence graph, component heat plot, leaving-one-combination-out scatter plot, density/violin plots, waterfall plot, and multi-outcome rank heat plot
 - Explicit separation between fitted component effects and exploratory visual summaries of intervention-level NMA estimates
+- Matching tightly cropped PDF/PNG/TIFF output for every `viscomp` figure without overriding package-default typography
 
 ### Risk of bias
 
@@ -50,12 +52,13 @@ The RevMan 5 lock applies only to conventional analyses performed by `meta`. Rev
 - Required for conventional analysis: `meta`
 - Required for network and component-model estimation: `netmeta`
 - Required for component visualization: `viscomp`
+- Required for plate-plot league figures: `nmaplateplot`
 - Optional for risk-of-bias figures: `robvis`, `RobustVis`, `ggplot2`
 
 Install dependencies before running the skill:
 
 ```r
-install.packages(c("meta", "netmeta", "viscomp", "robvis", "RobustVis", "ggplot2"))
+install.packages(c("meta", "netmeta", "viscomp", "nmaplateplot", "robvis", "RobustVis", "ggplot2"))
 ```
 
 The executor never installs or upgrades packages during an analysis.

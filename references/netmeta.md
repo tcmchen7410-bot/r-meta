@@ -39,6 +39,12 @@ The executor attaches `netmeta` when available, so every exported function can b
 - Ranking: `netrank()`, `rankogram()`
 - Partial orders: `netposet()`, `hasse()` and, when present, VIKOR methods
 
+## Figure export
+
+Wrap every network graphic in `export_plot(function() ..., stem, output_dir)` to obtain matching tightly cropped PDF, PNG, and TIFF files from one 600 dpi master. Do not open graphics devices directly. For network geometry specifically, call `export_network_graph()`; it derives outward label anchors from the final node coordinates and increases label distance with node size, preventing treatment names from overlapping node circles. The exporters preserve package-default typography.
+
+For a graphical league display, use `export_nmaplateplot(result, stem, output_dir, pooled = "random")`. It converts the network estimates to the upper triangle, direct estimates to the lower triangle, and treatment P-scores to the diagonal before calling `nmaplateplot::plateplot()`. It exports the same tightly cropped PDF/PNG/TIFF set. Verify the effect scale and direction because ratio measures are back-transformed while additive measures remain on their original scale.
+
 ## Extensions
 
 - Network meta-regression: `netmetareg()`
@@ -71,6 +77,8 @@ artifacts <- list(
   split = netsplit(result),
   design_decomposition = decomp.design(result)
 )
+
+export_network_graph(result, stem = "network", output_dir = output_dir)
 ```
 
 Check signatures against the installed version before copying this recipe. Functions differ in accepted input objects across releases.

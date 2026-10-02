@@ -7,7 +7,9 @@ result <- nmaMACE
 
 component_model <- netcomb(result)
 description <- viscomp::compdesc(result, sep = "+", heatmap = FALSE)
-component_heat <- viscomp::heatcomp(result, sep = "+", random = TRUE)
+component_heat <- capture_ggplot(
+  viscomp::heatcomp(result, sep = "+", random = TRUE)
+)
 
 artifacts <- list(
   additive_component_model = component_model,
@@ -16,7 +18,4 @@ artifacts <- list(
   component_heat = component_heat
 )
 
-ggplot2::ggsave(
-  file.path(output_dir, "component_heat.pdf"),
-  plot = component_heat
-)
+export_ggplot(component_heat, stem = "component_heat", output_dir = output_dir)

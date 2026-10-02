@@ -1,6 +1,6 @@
 ---
 name: r-meta-analysis
-description: Execute reproducible pairwise, frequentist network, and component network meta-analysis in R with meta, netmeta, and viscomp, plus robvis and RobustVis risk-of-bias visualization. Use for RevMan 5-compatible analyses, network synthesis, additive component models, component visual exploration, ranking, inconsistency, contribution, meta-regression, subgroup, diagnostics, sensitivity, publication-bias, and ROBUST-RCT workflows. Do not use for diagnostic-test-accuracy models unless another package is explicitly authorized.
+description: Execute reproducible pairwise, frequentist network, and component network meta-analysis in R with meta, netmeta, viscomp, and nmaplateplot, plus robvis and RobustVis risk-of-bias visualization. Use for RevMan 5-compatible analyses, network synthesis, additive component models, plate-plot league displays, component visual exploration, ranking, inconsistency, contribution, meta-regression, subgroup, diagnostics, sensitivity, publication-bias, and ROBUST-RCT workflows. Do not use for diagnostic-test-accuracy models unless another package is explicitly authorized.
 ---
 
 # R `meta`, `netmeta`, and `viscomp` Analysis
@@ -21,6 +21,8 @@ Run the analysis instead of merely drafting code. Use the bundled executor so ea
    ```
 
 7. Inspect `console.txt`, `result_summary.txt`, tables, network connectivity, direct evidence, and every plot. Resolve validity-affecting warnings and report remaining assumptions.
+
+For every conventional, network, and component figure, use the bundled exporters rather than opening graphics devices or calling `ggsave()` directly. `export_plot()` handles base/grid graphics, `export_ggplot()` handles `viscomp` ggplot objects, `export_forest()` handles conventional `meta` forests, `export_network_graph()` handles network geometry, and `export_nmaplateplot()` builds an `nmaplateplot` league display from a `netmeta` object. Wrap `viscomp` calls that draw while constructing a ggplot in `capture_ggplot()` to prevent stray `Rplots.pdf` files. Each exporter creates a matching tightly cropped PDF/PNG/TIFF set from one 600 dpi master without changing package-default fonts. Network graphs must use `export_network_graph()` so treatment labels sit outside nodes with point-size-aware spacing and short leader lines, matching the supplied reference layout.
 
 ## Plan contract
 

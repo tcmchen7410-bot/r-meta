@@ -18,12 +18,30 @@ if (!identical(status, 0L)) stop("Network smoke analysis failed.")
 expected <- c(
   "result.rds", "result_summary.txt", "meta_settings.R",
   "netmeta_settings.R", "console.txt", "session_info.txt",
-  "network.pdf", "plan_executed.R"
+  "network.pdf", "network.png", "network.tiff", "plan_executed.R"
 )
+if (requireNamespace("nmaplateplot", quietly = TRUE)) {
+  expected <- c(expected, "league_plateplot.pdf", "league_plateplot.png",
+                "league_plateplot.tiff")
+}
 missing <- expected[!file.exists(file.path(out, expected))]
 if (length(missing)) stop("Missing network outputs: ", paste(missing, collapse = ", "))
 
 fit <- readRDS(file.path(out, "result.rds"))
 if (!inherits(fit, "netmeta")) stop("Primary result is not a netmeta object.")
+
+png_info <- magick::image_info(magick::image_read(file.path(out, "network.png")))
+if (png_info$width >= 4800 || png_info$height >= 4800) {
+  stop("Network image was not tightly cropped.")
+}
+
+if (requireNamespace("nmaplateplot", quietly = TRUE)) {
+  plate_info <- magick::image_info(
+    magick::image_read(file.path(out, "league_plateplot.png"))
+  )
+  if (plate_info$width >= 6000 || plate_info$height >= 6000) {
+    stop("Plate plot was not tightly cropped.")
+  }
+}
 
 cat("Network smoke test passed. Output:", out, "\n")

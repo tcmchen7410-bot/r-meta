@@ -21,6 +21,21 @@ artifacts <- list(
   design_decomposition = decomp.design(result)
 )
 
-grDevices::pdf(file.path(output_dir, "network.pdf"), width = 7, height = 7)
-netgraph(result)
-grDevices::dev.off()
+export_network_graph(
+  result,
+  stem = "network",
+  output_dir = output_dir,
+  points = TRUE,
+  cex.points = 3,
+  pch.points = 21,
+  bg.points = "red"
+)
+
+if (requireNamespace("nmaplateplot", quietly = TRUE)) {
+  export_nmaplateplot(
+    result,
+    stem = "league_plateplot",
+    output_dir = output_dir,
+    pooled = "random"
+  )
+}

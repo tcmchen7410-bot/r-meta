@@ -71,14 +71,17 @@ artifacts <- list(
 )
 
 plots <- list(
-  heat = viscomp::heatcomp(result, sep = "+"),
-  violin = viscomp::specc(result, sep = "+", combination = c("A", "B"))
+  heat = capture_ggplot(viscomp::heatcomp(result, sep = "+")),
+  violin = capture_ggplot(
+    viscomp::specc(result, sep = "+", combination = c("A", "B"))
+  )
 )
 
 for (nm in names(plots)) {
-  ggplot2::ggsave(
-    file.path(output_dir, paste0("component_", nm, ".pdf")),
-    plot = plots[[nm]]
+  export_ggplot(
+    plots[[nm]],
+    stem = paste0("component_", nm),
+    output_dir = output_dir
   )
 }
 ```

@@ -54,7 +54,11 @@ analysis_env$optional_package_exports <- function(package) {
 }
 
 ok <- tryCatch({
+  previous_device_option <- getOption("device")
+  options(device = function(...) grDevices::pdf(NULL))
+  on.exit(options(device = previous_device_option), add = TRUE)
   sys.source(plan, envir = analysis_env, keep.source = TRUE)
+  while (grDevices::dev.cur() > 1L) grDevices::dev.off()
   current_settings <- meta::settings.meta(quietly = TRUE)
   if (!identical(current_settings, revman5_settings)) {
     stop("PLAN.R changed global meta settings. This skill locks settings.meta('RevMan5').")
