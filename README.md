@@ -11,15 +11,15 @@ A Codex skill that executes reproducible pairwise meta-analysis workflows with R
 - RevMan import helpers and the complete installed `meta` namespace through a generic execution plan
 - `robvis` traffic-light and summary plots
 - `RobustVis` ROBUST-RCT bar and traffic-light plots
-- Reproducibility bundle containing the executed plan, RDS objects, settings, console output, session information, and figures
-- Forest plots exported together as vector PDF, 300 dpi PNG, and 300 dpi LZW-compressed TIFF at A4 portrait width with content-driven height
-- Exact executed R plan copied to `analysis_executed.R` (`plan_executed.R` is retained for compatibility)
+- Five-file delivery bundle: PDF, PNG, TIFF, executed R code, and CSV statistics
+- RevMan5-layout forest plots exported together as tightly cropped 300 dpi PDF, PNG, and TIFF files with matching boundaries
+- Exact executable analysis copied to `analysis_executed.R`, including the RevMan5 preset and export helper
 
 ## Requirements
 
 - R 4.1 or newer
 - `meta`
-- `magick` (required for tightly cropped 300 dpi PNG/TIFF exports)
+- `magick` (required for tightly cropped 300 dpi PDF/PNG/TIFF exports)
 - Optional: `robvis`, `RobustVis`, and `ggplot2`
 
 Install dependencies explicitly in R when needed:
@@ -56,7 +56,7 @@ Inside a plan, export a forest plot with:
 export_forest(result, stem = "forest", output_dir = output_dir)
 ```
 
-This creates `forest.pdf`, `forest.png`, and `forest.tiff`. PDF output is vector and therefore does not have a DPI setting; the two raster files are rendered at 300 dpi. The width is 210 mm and `meta::forest()` calculates the required height from the plot contents.
+This creates `forest.pdf`, `forest.png`, and `forest.tiff` from one tightly cropped 300 dpi master. No A4 or other fixed-paper width is imposed. The helper hard-locks `layout = "RevMan5"`; the executor separately loads `meta` and `magick` and hard-locks `meta::settings.meta("RevMan5")`. The remaining two files are `analysis_executed.R`, containing the full executable analysis, and `statistics.csv`, containing study-level and pooled statistical results.
 
 ## RevMan compatibility
 
